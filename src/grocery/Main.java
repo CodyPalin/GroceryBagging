@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Scanner;
+import java.util.Set;
 
 public class Main {
 
@@ -15,6 +17,7 @@ public class Main {
 	public static void main(String[] args) {
 		ArrayList<Item> Items = new ArrayList<Item>();
 		HashMap<String, Integer> hmap = new HashMap<String, Integer>();
+		Set<Integer> allindexes = new HashSet<Integer>();
 		System.out.print(args[0]+"\n");
 		File filename = new File(args[0]);
 		if(!filename.exists()) {
@@ -41,12 +44,16 @@ public class Main {
 			Scanner linesc = new Scanner(line);
 			Item i = new Item();
 			i.ID = x;
+			allindexes.add(i.ID);
 			i.name= linesc.next();
 			i.weight = Integer.parseInt(linesc.next());
 			if(i.weight > bagsize)
 				fail();
 			totalItemWeight+=i.weight;
-			i.ConstraintString = linesc.nextLine();
+			if(linesc.hasNextLine())
+				i.ConstraintString = linesc.nextLine();
+			else
+				i.ConstraintString = "";
 			Items.add(i);
 			hmap.put(i.name, i.ID);
 			x++;
@@ -56,7 +63,43 @@ public class Main {
 			fail();
 		for(Item i : Items)
 		{
-			
+			Scanner cscan = new Scanner(i.ConstraintString);
+			if(cscan.hasNext()) 
+			{
+				String constraintType = cscan.next();
+				if(constraintType.equals("-")) 
+				{
+					while(cscan.hasNext())
+					{
+						String c = cscan.next();
+						int cindex = hmap.get(c);
+						i.constraints.add(cindex);
+						Items.get(cindex).constraints.add(i.ID);
+					}
+				}
+				else if(constraintType.equals("+"))
+				{
+					Set<Integer> negativeconstraints = new HashSet<Integer>(allindexes);
+					Set<Integer> positiveconstraints = new HashSet<Integer>();
+					while(cscan.hasNext())
+					{
+						String c = cscan.next();
+						int cindex = hmap.get(c);
+						positiveconstraints.add(cindex);
+					}
+					negativeconstraints.removeAll(positiveconstraints);
+					negativeconstraints.remove(i.ID);
+					for(int n : negativeconstraints) {
+						i.constraints.add(n);
+						Items.get(n).constraints.add(i.ID);
+					}
+				}
+			}
+			cscan.close();
+		}
+		for(Item item : Items)
+		{
+			System.out.println(item.toString());
 		}
 		
 		

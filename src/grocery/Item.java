@@ -12,9 +12,9 @@ public class Item {
 	public Item() {
 		
 	}
-	public String ToString(){
+	public String toString(){
 		
-		return ("ID="+ID+"name="+name+"weight="+weight+"constraints="+constraints);
+		return ("{ID= "+ID+", name="+name+", weight="+weight+", constraints="+constraints+"}");
 		
 	}
 }
