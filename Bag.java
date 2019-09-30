@@ -13,8 +13,8 @@ public class Bag {
 	public Bag(Bag b) {
 		max = b.max;
 		weight = b.weight;
-		constraints = b.constraints;
-		items = b.items;
+		constraints.addAll(b.constraints);
+		items.addAll(b.items);
 	}
 	public Bag add(Item item) {
 		Bag b = new Bag(this);

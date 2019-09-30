@@ -12,6 +12,12 @@ public class Item {
 	public Item() {
 		
 	}
+	public Item(Item i) {
+		ID = i.ID;
+		name = i.name;
+		weight = i.weight;
+		constraints = i.constraints;
+	}
 	public String toString(){
 		
 		return ("{ID= "+ID+", name="+name+", weight="+weight+", constraints="+constraints+"}");
