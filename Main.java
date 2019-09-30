@@ -102,11 +102,12 @@ public class Main {
 			}
 			cscan.close();
 		}
-		for(Item item : Items)
+		/*for(Item item : Items)
 		{
 			System.out.println(item.toString());
-		}
-		
+		}*/
+
+		sc.close();
 		states = new Stack<SearchState>();
 		bags = new ArrayList<Bag>();
 		for(int i = 0;i<numbags;i++)
@@ -139,7 +140,6 @@ public class Main {
 				fail();
 			}
 		}
-		sc.close();
 		System.out.println("success");
 		for(Bag b: currentstate.bags) 
 		{
