@@ -121,6 +121,7 @@ public class Main {
 		{
 			int currentItem = currentstate.addingitem;
 			Item cItem = Items.get(currentItem);
+			bags = currentstate.bags;
 			for(Bag b : bags) 
 			{
 				
@@ -144,12 +145,12 @@ public class Main {
 		{
 			System.out.println(b.toString());
 		}
-		//System.out.println((double)(System.currentTimeMillis()-start)/1000 + " seconds");
+		System.out.println((double)(System.currentTimeMillis()-start)/1000 + " seconds");
 	}
 
 	private static void fail() {
 		System.out.println("failure");
-		//System.out.println((double)(System.currentTimeMillis()-start)/1000 + " seconds");
+		System.out.println((double)(System.currentTimeMillis()-start)/1000 + " seconds");
 		System.exit(0);
 	}
 
