@@ -22,6 +22,7 @@ public class Main {
 		start = System.currentTimeMillis();
 		ArrayList<Item> Items = new ArrayList<Item>();
 		HashMap<String, Integer> hmap = new HashMap<String, Integer>();
+		HashMap<Integer, String> rhmap = new HashMap<Integer, String>();
 		Set<Integer> allindexes = new HashSet<Integer>();
 		System.out.print(args[0]+"\n");
 		File filename = new File(args[0]);
@@ -39,8 +40,8 @@ public class Main {
 		
 		numbags = Integer.parseInt(sc.next());
 		bagsize = Integer.parseInt(sc.next());
-		System.out.println("number of bags: "+numbags);
-		System.out.println("bag size: "+bagsize);
+		//System.out.println("number of bags: "+numbags);
+		//System.out.println("bag size: "+bagsize);
 		sc.nextLine();
 		int x = 0;
 		while (sc.hasNextLine()) 
@@ -61,6 +62,7 @@ public class Main {
 				i.ConstraintString = "";
 			Items.add(i);
 			hmap.put(i.name, i.ID);
+			rhmap.put(i.ID, i.name);
 			x++;
 			linesc.close();
 		}
@@ -143,7 +145,10 @@ public class Main {
 		System.out.println("success");
 		for(Bag b: currentstate.bags) 
 		{
-			System.out.println(b.toString());
+			for(int i: b.items) {
+				System.out.print(rhmap.get(i)+"\t");
+			}
+			System.out.println();
 		}
 		System.out.println((double)(System.currentTimeMillis()-start)/1000 + " seconds");
 	}
