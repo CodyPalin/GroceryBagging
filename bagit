@@ -1,0 +1,6 @@
+#!/bin/bash
+
+CLASSPATH=/home/CodyPalin/cs457/p1a/grocery/:.
+$JAVA_HOME/bin/java -cp $CLASSPATH Main $1 $2
+
+exit 0
