@@ -1,4 +1,4 @@
-package grocery;
+//package grocery;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -213,7 +213,7 @@ public class Main {
 		
 	}
 
-	private static ArrayList<SearchState> randomize(ArrayList<SearchState> tempstates) {
+	/*private static ArrayList<SearchState> randomize(ArrayList<SearchState> tempstates) {
 		ArrayList<SearchState> tempstates2 = new ArrayList<SearchState>();
 		int size = tempstates.size();
 		for(int i = 0; i<size; i++)
@@ -222,7 +222,7 @@ public class Main {
 			tempstates2.add(tempstates.remove(x));
 		}
 		return tempstates2;
-	}
+	}*/
 
 	private static void fail() {
 		System.out.println("failure");
