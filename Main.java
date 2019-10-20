@@ -59,7 +59,7 @@ public class Main {
 			i.name= linesc.next();
 			i.weight = Integer.parseInt(linesc.next());
 			if(i.weight > bagsize)
-				fail();
+				fail(0);
 			totalItemWeight+=i.weight;
 			if(linesc.hasNextLine())
 				i.ConstraintString = linesc.nextLine();
@@ -72,7 +72,7 @@ public class Main {
 			linesc.close();
 		}
 		if(totalItemWeight > bagsize*numbags)
-			fail();
+			fail(0);
 		for(Item i : Items)
 		{
 			Scanner cscan = new Scanner(i.ConstraintString);
@@ -126,20 +126,23 @@ public class Main {
 			b.max = bagsize;
 			bags.add(b);
 		}
-		int minBagsUsed = Integer.MAX_VALUE;
+		//int minBagsUsed = Integer.MAX_VALUE;
 		//SearchState bestbags = new SearchState(bags, 0);
 		//for(int i2 = 0; i2<5; i2++) {
 			//initialize starting state
 			SearchState currentstate = new SearchState(bags, 0);
+			int statesexpanded = 0;
 			while(!currentstate.IsGoalState(Items.size())) 
 			{
 				//load state from stack
+				statesexpanded++;
 				int currentItem = currentstate.addingitem;
 				Item cItem = Items.get(currentItem);
 				bags = currentstate.bags;
 	
 				ArrayList<SearchState> tempstates = new ArrayList<SearchState>();
-				for(Bag b : bags) 
+				ArrayList<Bag> uniquebags = getuniquebags(bags); //prevents duplicate states, this makes failures much quicker to find.
+				for(Bag b : uniquebags) 
 				{
 					
 					if(b.canAdd(cItem))
@@ -153,15 +156,20 @@ public class Main {
 				}
 				//randomizes stack
 				//tempstates = randomize(tempstates); shuffles states
+				if(statesexpanded > 1)
 				for(SearchState s:tempstates) {
 					states.push(s);
+				}
+				else
+				{
+					states.push(tempstates.get(tempstates.size()-1));
 				}
 				if(!states.empty()) {
 				currentstate = states.pop();
 				//System.out.println(currentItem);
 				}
 				else {
-					fail();
+					fail(statesexpanded);
 				}
 			}
 			//System.out.println(currentstate.bags);
@@ -172,12 +180,11 @@ public class Main {
 				if(b.items.size() != 0) 
 					numbags++;
 			}
-			if(numbags < minBagsUsed) {
+			/*if(numbags < minBagsUsed) {
 				minBagsUsed = numbags;
 				//bestbags = currentstate;
-			}
+			}*/
 				
-			System.out.println("Bags used:"+ numbags);
 			for(Bag b: currentstate.bags) 
 			{
 				
@@ -189,6 +196,8 @@ public class Main {
 			}
 		//}
 			System.out.println((double)(System.currentTimeMillis()-start)/1000 + " seconds");
+			System.out.println("States expanded: "+statesexpanded);
+			System.out.println("Bags used:"+ numbags);
 			/*System.out.println("Minimum bags used: "+minBagsUsed);
 			System.out.println("Best Solution:");
 			for(Bag b: bestbags.bags) 
@@ -215,8 +224,26 @@ public class Main {
 		return tempstates2;
 	}*/
 
-	private static void fail() {
+	private static ArrayList<Bag> getuniquebags(ArrayList<Bag> bags) {
+		ArrayList<Bag> uniquebags = new ArrayList<Bag>();
+		boolean emptybagadded = false;
+		for(Bag b: bags) {
+			if(b.items.isEmpty()) {
+				if(!emptybagadded)
+				{
+					uniquebags.add(b);
+					emptybagadded = true;
+				}
+			}
+			else
+				uniquebags.add(b);
+		}
+		return uniquebags;
+	}
+
+	private static void fail(int statesexpanded) {
 		System.out.println("failure");
+		System.out.println("States expanded: "+statesexpanded);
 		//System.out.println((double)(System.currentTimeMillis()-start)/1000 + " seconds");
 		System.exit(0);
 	}
