@@ -3,23 +3,13 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.Stack;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.StringTokenizer;
-import java.util.Vector;
 
 
 public class Main {
@@ -126,7 +116,8 @@ public class Main {
 
 		sc.close();
 
-		Collections.sort(Items, new ItemSort());
+		Collections.sort(Items, new ItemSort()); // this improves the solution in a noticeable way both in terms of bags used and time taken
+		//Collections.reverse(Items); //this results in a much worse solution in a longer time.
 		states = new Stack<SearchState>();
 		bags = new ArrayList<Bag>();
 		for(int i = 0;i<numbags;i++)
@@ -136,7 +127,7 @@ public class Main {
 			bags.add(b);
 		}
 		int minBagsUsed = Integer.MAX_VALUE;
-		SearchState bestbags = new SearchState(bags, 0);
+		//SearchState bestbags = new SearchState(bags, 0);
 		//for(int i2 = 0; i2<5; i2++) {
 			//initialize starting state
 			SearchState currentstate = new SearchState(bags, 0);
@@ -183,7 +174,7 @@ public class Main {
 			}
 			if(numbags < minBagsUsed) {
 				minBagsUsed = numbags;
-				bestbags = currentstate;
+				//bestbags = currentstate;
 			}
 				
 			System.out.println("Bags used:"+ numbags);
@@ -198,7 +189,7 @@ public class Main {
 			}
 		//}
 			System.out.println((double)(System.currentTimeMillis()-start)/1000 + " seconds");
-			System.out.println("Minimum bags used: "+minBagsUsed);
+			/*System.out.println("Minimum bags used: "+minBagsUsed);
 			System.out.println("Best Solution:");
 			for(Bag b: bestbags.bags) 
 			{
@@ -208,7 +199,7 @@ public class Main {
 				}
 				if(!b.items.isEmpty())
 					System.out.println();
-			}
+			}*/
 		}
 		
 	}
