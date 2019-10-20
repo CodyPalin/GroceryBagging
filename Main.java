@@ -13,7 +13,7 @@ import java.util.Collections;
 import java.util.Comparator;
 
 
-public class Main_v2 {
+public class Main{
 
 	private static int bagsize = 0;
 	public static int numbags=-1;
