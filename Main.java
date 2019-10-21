@@ -205,17 +205,18 @@ public class Main {
 			System.out.println((double)(System.currentTimeMillis()-start)/1000 + " seconds");
 			System.out.println("States expanded: "+statesexpanded);
 			System.out.println("Bags used:"+ numbags);
-			/*System.out.println("Minimum bags used: "+minBagsUsed);
-			System.out.println("Best Solution:");
-			for(Bag b: bestbags.bags) 
-			{
-				
-				for(int i: b.items) {
-					System.out.print(rhmap.get(i)+"\t");
-				}
-				if(!b.items.isEmpty())
-					System.out.println();
-			}*/
+			
+			//TODO implement local search
+			//while searching: (set specific amount of time to search? 5 seconds?)
+				//-go through all the bags that have one item in them, attempt to add that item to other bags where weight is not full
+				//-if this is possible, continue searching from this solution, remove this empty bag from used bags.
+				//-if this is not possible, attempt to remove an item from a bag and remove it from another bag so that the weight is 
+				//	on average distributed more evenly than the previous solution.
+				//-to determine if weight is distributed evenly:
+					//compute the total sum of the weights of all bags, and divide by number of bags, this is the ideal weight in each bag
+					//compute the standard deviation from this weight
+					//lower standard deviation is a better solution
+				//if a more distributed solution is found, continue searching from this new solution.
 		}
 		
 	}
@@ -253,7 +254,7 @@ public class Main {
 					uniquebags.add(b);
 			}
 		}
-		Collections.reverse(uniquebags); //lcv heuristic, add to first not full bag first, sorting would take too long. adding to empty bag first increases speed.
+		Collections.reverse(uniquebags); //lcv heuristic, attempting to add to first non full, non empty bag first, sorting each time takes too long.
 		return uniquebags;
 	}
 
