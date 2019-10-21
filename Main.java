@@ -16,6 +16,7 @@ public class Main {
 
 	private static int bagsize = 0;
 	public static int numbags=-1;
+	public static int minweight = Integer.MAX_VALUE;
 	public static int sizebags=-1;
 	private static int totalItemWeight = 0;
 	private static long start;
@@ -61,6 +62,7 @@ public class Main {
 			if(i.weight > bagsize)
 				fail(0);
 			totalItemWeight+=i.weight;
+			minweight = Integer.min(minweight, i.weight);
 			if(linesc.hasNextLine())
 				i.ConstraintString = linesc.nextLine();
 			else
@@ -142,6 +144,7 @@ public class Main {
 	
 				ArrayList<SearchState> tempstates = new ArrayList<SearchState>();
 				ArrayList<Bag> uniquebags = getuniquebags(bags); //prevents duplicate states, this makes failures much quicker to find.
+				//implement LCV by removing full bags and sorting bags by most constrained, could keep a record of currently full bags so that calculating which bags are full doesn't need to happen each time.
 				for(Bag b : uniquebags) 
 				{
 					
@@ -175,24 +178,28 @@ public class Main {
 			//System.out.println(currentstate.bags);
 			System.out.println("success");
 			int numbags = 0;
+			ArrayList<Bag> usedbags = new ArrayList<Bag>();
 			for(Bag b: bags)
 			{
 				if(b.items.size() != 0) 
+				{
+					usedbags.add(b);
 					numbags++;
+				}
 			}
 			/*if(numbags < minBagsUsed) {
 				minBagsUsed = numbags;
 				//bestbags = currentstate;
 			}*/
-				
-			for(Bag b: currentstate.bags) 
+			
+			for(Bag b: usedbags) 
 			{
 				
 				for(int i: b.items) {
 					System.out.print(rhmap.get(i)+"\t");
 				}
-				if(!b.items.isEmpty())
-					System.out.println();
+				System.out.print("weight: "+b.weight); //print weight of bag
+				System.out.println();
 			}
 		//}
 			System.out.println((double)(System.currentTimeMillis()-start)/1000 + " seconds");
@@ -224,6 +231,12 @@ public class Main {
 		return tempstates2;
 	}*/
 
+	/*private static ArrayList<Bag> getsortedbags(ArrayList<Bag> bags) {
+		ArrayList<Bag> sortedBags = new ArrayList<Bag>(bags);
+		Collections.sort(sortedBags, new BagSort());
+		return sortedBags;
+	}*/
+
 	private static ArrayList<Bag> getuniquebags(ArrayList<Bag> bags) {
 		ArrayList<Bag> uniquebags = new ArrayList<Bag>();
 		boolean emptybagadded = false;
@@ -235,9 +248,12 @@ public class Main {
 					emptybagadded = true;
 				}
 			}
-			else
-				uniquebags.add(b);
+			else {
+				if(b.weight+minweight <= b.max)
+					uniquebags.add(b);
+			}
 		}
+		Collections.reverse(uniquebags); //lcv heuristic, add to first not full bag first, sorting would take too long. adding to empty bag first increases speed.
 		return uniquebags;
 	}
 
@@ -258,6 +274,29 @@ public class Main {
 	    	if(a.constraints.size() > b.constraints.size())
 	    		return -1;
 	    	else if(a.constraints.size() < b.constraints.size())
+	    		return 1;
+	    	else 
+	    	{
+	    		if(a.weight > b.weight)
+	    			return -1;
+	    		else if(a.weight < b.weight)
+	    			return 1;
+	    		else
+	    			return 0;
+	    	}
+	    } 
+	} 
+	static class BagSort implements Comparator<Bag> 
+	{ 
+		//negative if bag a is more constrained than bag b
+		//0 if the items are equally constrained
+		//positive if bag a is less constrained than bag b
+		@Override
+	    public int compare(Bag a, Bag b) 
+	    { 
+	    	if(a.items.size() > b.items.size())
+	    		return -1;
+	    	else if(a.items.size() < b.items.size())
 	    		return 1;
 	    	else 
 	    	{
