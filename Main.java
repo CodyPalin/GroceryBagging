@@ -18,6 +18,7 @@ public class Main {
 	public static int numbags=-1;
 	public static int minweight = Integer.MAX_VALUE;
 	public static int sizebags=-1;
+	public static boolean arcconsistency = true;
 	private static int totalItemWeight = 0;
 	private static long start;
 	private static Stack<SearchState> states;
@@ -145,23 +146,48 @@ public class Main {
 				ArrayList<SearchState> tempstates = new ArrayList<SearchState>();
 				ArrayList<Bag> uniquebags = getuniquebags(bags); //prevents duplicate states, this makes failures much quicker to find.
 				//implement LCV by removing full bags and sorting bags by most constrained, could keep a record of currently full bags so that calculating which bags are full doesn't need to happen each time.
+				int currentindex = Items.indexOf(cItem);
+				Item nextItem = null;
+				if(currentindex !=Items.size()-1) {
+					nextItem= Items.get(currentindex+1);
+				}
+				 
 				for(Bag b : uniquebags) 
 				{
 					
 					if(b.canAdd(cItem))
 					{
+						boolean topflag = false;
+						if(arcconsistency) {
+							if(nextItem != null && !b.canAdd(nextItem)) {
+								topflag = true;
+							}
+						}
 						//add onto stack
 						ArrayList<Bag> newbags = new ArrayList<Bag>(bags);
 						newbags.set(bags.indexOf(b), b.add(cItem));
 						//states.push(new SearchState(newbags, currentItem+1));
-						tempstates.add(new SearchState(newbags, currentItem+1));
+						tempstates.add(new SearchState(newbags, currentItem+1,topflag));
 					}
 				}
 				//randomizes stack
 				//tempstates = randomize(tempstates); shuffles states
-				if(statesexpanded > 1)
-				for(SearchState s:tempstates) {
-					states.push(s);
+				
+				ArrayList<SearchState> toptemp = new ArrayList<SearchState>();
+				if(statesexpanded > 1) {
+					for(SearchState s:tempstates) {
+						if(s.topflag) {
+							toptemp.add(s);
+						}
+						else
+							states.push(s);
+					}
+					if(!toptemp.isEmpty())
+					{
+						for(SearchState s:toptemp) {
+						states.push(s);
+						}
+					}
 				}
 				else
 				{
@@ -198,19 +224,28 @@ public class Main {
 				for(int i: b.items) {
 					System.out.print(rhmap.get(i)+"\t");
 				}
-				System.out.print("weight: "+b.weight); //print weight of bag
+				if(args.length >2 && args[2].equals("-debug")) {
+					System.out.print("weight: "+b.weight); //print weight of bag
+					System.out.print("\t num constraints:"+b.constraints.size());
+				}
 				System.out.println();
 			}
 		//}
-			System.out.println((double)(System.currentTimeMillis()-start)/1000 + " seconds");
-			System.out.println("States expanded: "+statesexpanded);
-			System.out.println("Bags used:"+ numbags);
+			double stddev = getstddev(usedbags);
+			double idealWeightDistribution = (double)totalItemWeight/usedbags.size();
+			if(args.length >2 && args[2].equals("-debug")) {
+				System.out.println((double)(System.currentTimeMillis()-start)/1000 + " seconds");
+				System.out.println("States expanded: "+statesexpanded);
+				System.out.println("Bags used:"+ numbags);
+				System.out.println("Ideal Weight Distribution:"+idealWeightDistribution);
+			}
 			
 			//TODO implement local search
 			//while searching: (set specific amount of time to search? 5 seconds?)
-				//-go through all the bags that have one item in them, attempt to add that item to other bags where weight is not full
+				//-if it is possible to have a solution with fewer bags (by weight, check items with constraints against every other item)
+					//-go through all the bags that have one item in them, attempt to add that item to other bags where weight is not full
 				//-if this is possible, continue searching from this solution, remove this empty bag from used bags.
-				//-if this is not possible, attempt to remove an item from a bag and remove it from another bag so that the weight is 
+				//-if this is not possible, attempt to remove an item from a bag and add it to another bag so that the weight is 
 				//	on average distributed more evenly than the previous solution.
 				//-to determine if weight is distributed evenly:
 					//compute the total sum of the weights of all bags, and divide by number of bags, this is the ideal weight in each bag
@@ -219,6 +254,15 @@ public class Main {
 				//if a more distributed solution is found, continue searching from this new solution.
 		}
 		
+	}
+
+	private static double getstddev(ArrayList<Bag> usedbags) {
+		int sum = 0;
+		for(Bag b: usedbags) {
+			sum+=b.weight;
+		}
+		double mean = (double)sum/usedbags.size();
+		return 0;
 	}
 
 	/*private static ArrayList<SearchState> randomize(ArrayList<SearchState> tempstates) {
