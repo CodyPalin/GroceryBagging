@@ -1,4 +1,4 @@
-//package grocery;
+package grocery;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -30,6 +30,16 @@ public class Bag {
 			return false;
 		
 		return true;
+	}
+	public void remove(Item item) {
+		items.remove((Object)item.ID);
+		constraints.clear();
+		weight = 0;
+		for(int i: items){
+			Item i2 =Main.unsortedItems.get(i);
+			weight+=i2.weight;
+			constraints.addAll(i2.constraints);
+		}
 	}
 	public String toString() {
 		String itemlist = "";

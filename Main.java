@@ -1,4 +1,4 @@
-//package grocery;
+package grocery;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -16,21 +16,29 @@ public class Main {
 
 	private static int bagsize = 0;
 	public static int numbags=-1;
+	public static int numitems=-1;
 	public static int minweight = Integer.MAX_VALUE;
 	public static int sizebags=-1;
+	public static boolean local = false;
 	public static boolean arcconsistency = true;
+	public static boolean debug = false;
 	private static int totalItemWeight = 0;
 	private static long start;
+	public static ArrayList<Item> unsortedItems = new ArrayList<Item>();
 	private static Stack<SearchState> states;
 	private static ArrayList<Bag> bags;
 	
+	private static HashMap<String, Integer> hmap = new HashMap<String, Integer>();
+	private static HashMap<Integer, String> rhmap = new HashMap<Integer, String>();
 	public static void main(String[] args) {
 		if(args.length ==1||args[1].equals("-depth")) {
 			//System.out.println("depth");
+		if((args.length >1 && args[1].equals("-debug"))||(args.length >2 && args[2].equals("-debug"))||(args.length >3 && args[3].equals("-debug")))
+			debug = true;
+		if((args.length >1 && args[1].equals("-local")) || (args.length >2 && args[2].equals("-local")))
+			local = true;
 		start = System.currentTimeMillis();
 		ArrayList<Item> Items = new ArrayList<Item>();
-		HashMap<String, Integer> hmap = new HashMap<String, Integer>();
-		HashMap<Integer, String> rhmap = new HashMap<Integer, String>();
 		Set<Integer> allindexes = new HashSet<Integer>();
 		//System.out.print(args[0]+"\n");
 		File filename = new File(args[0]);
@@ -116,9 +124,9 @@ public class Main {
 		{
 			System.out.println(item.toString());
 		}*/
-
+		numitems = Items.size();
 		sc.close();
-
+		unsortedItems= new ArrayList<Item>(Items);
 		Collections.sort(Items, new ItemSort()); // this improves the solution in a noticeable way both in terms of bags used and time taken
 		//Collections.reverse(Items); //this results in a much worse solution in a longer time.
 		states = new Stack<SearchState>();
@@ -145,7 +153,8 @@ public class Main {
 	
 				ArrayList<SearchState> tempstates = new ArrayList<SearchState>();
 				ArrayList<Bag> uniquebags = getuniquebags(bags); //prevents duplicate states, this makes failures much quicker to find.
-				//implement LCV by removing full bags and sorting bags by most constrained, could keep a record of currently full bags so that calculating which bags are full doesn't need to happen each time.
+				if(cItem.constraints.size()+1 == numitems) //if the item has constraints against every item, we save time by putting the emptiest bag first, as it must be in a bag by itself.
+					Collections.reverse(uniquebags);
 				int currentindex = Items.indexOf(cItem);
 				Item nextItem = null;
 				if(currentindex !=Items.size()-1) {
@@ -217,29 +226,98 @@ public class Main {
 				minBagsUsed = numbags;
 				//bestbags = currentstate;
 			}*/
-			
-			for(Bag b: usedbags) 
-			{
-				
-				for(int i: b.items) {
-					System.out.print(rhmap.get(i)+"\t");
-				}
-				if(args.length >2 && args[2].equals("-debug")) {
-					System.out.print("weight: "+b.weight); //print weight of bag
-					System.out.print("\t num constraints:"+b.constraints.size());
-				}
-				System.out.println();
-			}
+			if(debug||!local)
+			printBags(usedbags);
 		//}
 			double stddev = getstddev(usedbags);
 			double idealWeightDistribution = (double)totalItemWeight/usedbags.size();
-			if(args.length >2 && args[2].equals("-debug")) {
+			if(debug) {
 				System.out.println((double)(System.currentTimeMillis()-start)/1000 + " seconds");
 				System.out.println("States expanded: "+statesexpanded);
 				System.out.println("Bags used:"+ numbags);
 				System.out.println("Ideal Weight Distribution:"+idealWeightDistribution);
+				System.out.println("Standard Deviation: "+stddev);
 			}
-			
+			if(local) {
+				long t= System.currentTimeMillis();
+				long end = t+15000;
+				Collections.sort(usedbags, new BagSortWeight());
+				ArrayList<Bag> tempbags = new ArrayList<Bag>(usedbags);
+				while(System.currentTimeMillis()<end && stddev >1) {
+					//pull out an item
+					Item pull = null;
+					Bag pulledFrom = null;
+					int i = 0;
+					while(pull==null && i<bagsize-idealWeightDistribution) {
+						for(Bag b: tempbags) {
+							if(b.weight > idealWeightDistribution)
+							{
+								for(int item: b.items)
+								{
+									Item potential =unsortedItems.get(item);
+									if(potential.weight == b.weight-(int)idealWeightDistribution+i || potential.weight == b.weight-(int)idealWeightDistribution-i) {
+										pull = potential;
+										pulledFrom = b;
+										
+									}
+								}
+							}
+						}
+						i++;
+					}
+					if(pull == null)
+						break;
+					else {
+						pulledFrom.remove(pull); //pull item out of bag
+						tempbags.remove(pulledFrom);//remove bag from bag list
+						usedbags.remove(pulledFrom);
+						tempbags.add(pulledFrom); //add bag to back of bag list
+						usedbags.add(pulledFrom);
+					}
+					for(Bag b: tempbags) {	
+						if(tempbags.indexOf(b)==tempbags.size()-1)
+							break;
+						if(pull.weight == (int)idealWeightDistribution-b.weight) 
+						{
+							if(b.canAdd(pull))
+							{
+								b.add(pull);
+								pull = null;
+								break;
+							}
+						}
+					}
+					if(pull != null) //if no solution found yet
+					for(Bag b: tempbags) {
+						if(pull.weight <= (int)idealWeightDistribution-b.weight)
+						{
+							if(b.canAdd(pull))
+							{
+								b.add(pull);
+								pull = null;
+								break;
+							}
+						}
+					}
+					if(pull==null) {
+						usedbags = (ArrayList<Bag>) tempbags.clone();
+						if(debug) {
+							stddev = getstddev(usedbags);
+							//printBags(usedbags);
+							System.out.println("Standard Deviation: "+stddev);
+						}
+					}
+					else {
+						tempbags=(ArrayList<Bag>) usedbags.clone();
+						continue;
+					}
+				}
+				printBags(usedbags);
+				if(debug) {
+					System.out.println("Ideal Weight Distribution:"+idealWeightDistribution);
+					System.out.println("Standard Deviation: "+stddev);
+				}
+			}
 			//TODO implement local search
 			//while searching: (set specific amount of time to search? 5 seconds?)
 				//-if it is possible to have a solution with fewer bags (by weight, check items with constraints against every other item)
@@ -252,6 +330,23 @@ public class Main {
 					//compute the standard deviation from this weight
 					//lower standard deviation is a better solution
 				//if a more distributed solution is found, continue searching from this new solution.
+			
+		}
+		
+	}
+
+	private static void printBags(ArrayList<Bag> usedbags) {
+		for(Bag b: usedbags) 
+		{
+			
+			for(int i: b.items) {
+				System.out.print(rhmap.get(i)+"\t");
+			}
+			if(debug) {
+				System.out.print("weight: "+b.weight); //print weight of bag
+				System.out.print("\t num constraints:"+b.constraints.size());
+			}
+			System.out.println();
 		}
 		
 	}
@@ -262,7 +357,12 @@ public class Main {
 			sum+=b.weight;
 		}
 		double mean = (double)sum/usedbags.size();
-		return 0;
+		int sum2 =0;
+		for(Bag b: usedbags) {
+			sum2+=Math.pow(b.weight-mean,2);
+		}
+		double stdev = Math.sqrt((double)sum2/usedbags.size());
+		return stdev;
 	}
 
 	/*private static ArrayList<SearchState> randomize(ArrayList<SearchState> tempstates) {
@@ -294,7 +394,7 @@ public class Main {
 				}
 			}
 			else {
-				if(b.weight+minweight <= b.max)
+				if(b.weight+minweight <= b.max && b.constraints.size()+b.items.size() < numitems) //if item weight is full
 					uniquebags.add(b);
 			}
 		}
@@ -352,6 +452,23 @@ public class Main {
 	    		else
 	    			return 0;
 	    	}
+	    } 
+	} 
+	static class BagSortWeight implements Comparator<Bag> 
+	{ 
+		//negative if bag a is more constrained than bag b
+		//0 if the items are equally constrained
+		//positive if bag a is less constrained than bag b
+		@Override
+	    public int compare(Bag a, Bag b) 
+	    { 
+    	
+    		if(a.weight > b.weight)
+    			return -1;
+    		else if(a.weight < b.weight)
+    			return 1;
+    		else
+    			return 0;
 	    } 
 	} 
 }
