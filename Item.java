@@ -23,4 +23,5 @@ public class Item {
 		return ("{ID= "+ID+", name="+name+", weight="+weight+", constraints="+constraints+"}");
 		
 	}
+	
 }

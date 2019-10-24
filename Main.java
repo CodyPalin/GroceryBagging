@@ -1,4 +1,4 @@
-package grocery;
+//package grocery;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -20,7 +20,7 @@ public class Main {
 	public static int minweight = Integer.MAX_VALUE;
 	public static int sizebags=-1;
 	public static boolean local = false;
-	public static boolean arcconsistency = true;
+	public static boolean arcconsistency = false;
 	public static boolean debug = false;
 	private static int totalItemWeight = 0;
 	private static long start;
@@ -31,8 +31,9 @@ public class Main {
 	private static HashMap<String, Integer> hmap = new HashMap<String, Integer>();
 	private static HashMap<Integer, String> rhmap = new HashMap<Integer, String>();
 	public static void main(String[] args) {
-		if(args.length ==1||args[1].equals("-depth")) {
-			//System.out.println("depth");
+		if(args.length ==1||!args[1].equals("-slow")) {
+			arcconsistency = true;
+		}
 		if((args.length >1 && args[1].equals("-debug"))||(args.length >2 && args[2].equals("-debug"))||(args.length >3 && args[3].equals("-debug")))
 			debug = true;
 		if((args.length >1 && args[1].equals("-local")) || (args.length >2 && args[2].equals("-local")))
@@ -318,7 +319,7 @@ public class Main {
 					System.out.println("Standard Deviation: "+stddev);
 				}
 			}
-			//TODO implement local search
+			//implement local search
 			//while searching: (set specific amount of time to search? 5 seconds?)
 				//-if it is possible to have a solution with fewer bags (by weight, check items with constraints against every other item)
 					//-go through all the bags that have one item in them, attempt to add that item to other bags where weight is not full
@@ -333,7 +334,6 @@ public class Main {
 			
 		}
 		
-	}
 
 	private static void printBags(ArrayList<Bag> usedbags) {
 		for(Bag b: usedbags) 

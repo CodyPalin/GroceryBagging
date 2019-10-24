@@ -1,0 +1,92 @@
+Authors: Cody Palin and Tung Ho
+Class:  CS457 - Introduction to Artificial Intelligence
+
+
+Overview:
+This project develops an algorithm to bag groceries that have constraints on what items can be bagged with what, 
+how much you can put in a bag, and the number of bags available. The program is given the name of a text file that 
+defines the grocery bagging problem as the last command line argument. The first line in the file determines the number of bags 
+available. The next line determines the maximum bag size. The remaining lines define the items that must be bagged. Each line has 
+a distinct name, a number associated with it which defines its size, possibly followed by a + or a – which represents compatibility 
+(aka positive compatibility) or incompatibility (aka negative compatibility) and followed by a list of items. The + or – and a list 
+of items define the constraints on what can be bagged with the item. A + indicates that it is OK to bag the item with anything in the 
+list that follows (i.e. positive compatibility), but nothing else. A – indicates that it is NOT OK to bag the item with anything in the 
+list (i.e. negative compatibility), but you can bag the item with anything else. If no sign is given and no list is provided for the 
+item on a given line, then the item is assumed to be compatible with everything in the problem. However, the above item can still be 
+rejected by some other item(s) in the problem. In either case, the program will determine at least one way to bag all the items and at 
+the same time satisfy the given constraints. MRV and LCV heuristics were added to this search to improve the runtime and number of states
+that needed to be examined. If -slow is passed as an argument, the program will run without arc consistency, arc consistency may improve the 
+performance of the algorithm further. If -local is passed as an argument, local search will be performed, improving the distribution of
+items in the bags so that the weight will be more evenly distributed than the initial solution found by the algorithm.
+
+
+Compiling and Using:
+	make clean && make
+	./bagit filename [-slow] [-local] [-debug]
+	
+	-debug: see extra information about the search being performed
+	-local: after finding a solution, performs a hill climbing search with local moves
+	-slow: performs the search without arc consistency checking
+
+
+Design:
+	A list of Item objects are added to bags, the Items' constraint sets are added to the Bags' constraint sets so that the next item being
+	added doesn't have to consider whether it can be in a bag with each item, simply whether that bag is compatible with the item
+	currently being added. To do so, constraints are reversed, positive constraints become negative constraints on every other item in the set
+	of all items. Additionally, transitive constraints are added so that there only needs to be a one way check when an item is being added 
+	to a bag, whether the item being added is in this list of constraints.
+	
+	MRV and LCV Heuristics:
+	In order to implement the MRV heuristic, before the list of items is iterated through and attempted to be added to the first bag, the items
+	are sorted by the number of constraints and the item's weights with the number of constraints taking priority (if the number of constraints
+	is the same, weight will be considered). The most constrained and highest weighted variable will be added to a bag first.
+	In order to implement the LCV heuristic, I attempt to add the item to the first bag that is not filtered out (see Filtering Bags), then the next
+	bag that was not filtered out etc. This bag will first be the most constrained bag that has space remaining, and does not have constraints
+	against every item. This way the bag that the item is added to will have the least or nearly the least constraints on the domain of remaining
+	items to be added.
+	
+	Filtering Bags:
+	While not a requirement for this project, a significant speedup was observed especially on tests that would fail when I filtered out the bags
+	before checking if items can be added to them that:
+	1. Are empty, besides the first empty bag found
+	2. have constraints against every item not already in that bag
+	3. Are full by weight
+	The bags that are filtered out, even if the current item could be added to them, would not be added onto the stack. This removes a lot of duplicate
+	states, as well as reduces some processing time for each node expansion
+	
+	Arc Consistency Checking:
+	While adding an item to bags, the states that are added (not filtered out, and are possible states) are ordered. The states where the current
+	item is being added to a bag that the next item cannot be added to are added to the stack on top of those where the current item's position reduces
+	the domain of the next item to be added.
+	
+	Local Search:
+	Because this algorithm finds the lowest number of bags in almost every case, the goal of the solution improvement done by local search
+	was chosen to be an even distribution of items in the bags. To do this, the algorithm calculates the standard deviation of the weights in the
+	bags, and attempts to lower this standard deviation with every local move until either it cannot improve further without choosing bad moves,
+	or an arbitrary time (15 seconds) has passed.
+
+Testing and Results:
+To determine whether progress was being made after implementing the MRV, LCV Heuristics, arc consistency and other speedup techniques, 
+test files were performed before and after changes were made.
+
+In one case, when testing a file with 20 items that was not possible, before adding the filtering technique, around 19 million nodes had to be expanded before
+it was found to be a failed bagging operation. After the filtering technique was added, only 16 nodes had to be expanded to determine that this bagging
+operation could not be done. This filtering technique was a significant speed improvement on failed cases.
+
+When testing the MRV Heuristic sorting of items, not only would the algorithm find a solution faster with MRV, but it would do so by expanding
+much fewer nodes and in much quicker time. In a great majority of cases tested after MRV's implementation, the solution found would be the minimum
+number of bags possible, and with N nodes expanded (N= number of items).
+
+When performing test for arc consistency checking on large item sets, the time improvement was not noticeable, if there was any (its potentially
+slower due to the extra calculations necessary). This may improve time significantly in specific cases however, where this checking is crucial to 
+finding a solution and large amounts of backtracking would have been necessary otherwise.
+
+When testing the local search, a large test file with a high standard deviation (2.9) was tested, and after the local search was done, a
+standard deviation of 1.65 was achieved
+
+
+References:
+We consulted the official JAVA API from Oracle for several data structures in this project, as well as this link:
+https://www.mathsisfun.com/data/standard-deviation-formulas.html 
+for a reference of how a standard deviation calculation is performed.
+
