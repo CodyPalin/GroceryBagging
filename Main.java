@@ -215,7 +215,7 @@ public class Main {
 			System.out.println("success");
 			int numbags = 0;
 			ArrayList<Bag> usedbags = new ArrayList<Bag>();
-			for(Bag b: bags)
+			for(Bag b: currentstate.bags)
 			{
 				if(b.items.size() != 0) 
 				{
